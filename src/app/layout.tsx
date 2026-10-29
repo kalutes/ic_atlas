@@ -3,6 +3,21 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "IC cards",
   description: "Japanese IC card collection.",
+  applicationName: "IC cards",
+  appleWebApp: {
+    capable: true,
+    title: "IC cards",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: [
+      {
+        url: "/icons/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
 };
 export const viewport: Viewport = {
   themeColor: "#111315",

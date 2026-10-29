@@ -119,6 +119,23 @@ docker compose logs --tail=50 ic-atlas
 
 `/api/health` returns success only after the database and catalog initialize. Startup errors do not reset data. The runtime image has no compiler toolchain and runs without elevated capabilities.
 
+### Tailscale HTTPS and phone installation
+
+The app includes a web manifest, 192px/512px installation icons, and an Apple touch icon. It opens as a standalone app when installed. It still needs a connection to the server; offline browsing and queued edits are not implemented.
+
+Use the existing Tailscale app to provide HTTPS. In its Shell, run `tailscale serve status` to see the current hostname and HTTPS ports. Pick an unused HTTPS port and a separate unused HTTP port on the TrueNAS host. For example, if HTTPS 443 and 8443 are occupied, use HTTPS 10000 and local HTTP 3335:
+
+```sh
+tailscale serve --bg --https=10000 http://127.0.0.1:3335
+tailscale serve status
+```
+
+Configure IC Atlas with `BIND_ADDRESS=127.0.0.1`, `APP_PORT=3335`, and `APP_ORIGIN=https://<full-tailscale-hostname>:10000`. The origin must include the HTTPS port. The Tailscale app must share host networking to reach this loopback target; if it has its own network namespace, its `127.0.0.1` is a different interface. Use the same networking arrangement as any existing loopback Serve targets. Add only the new port; `tailscale serve reset` clears existing services. See the [Tailscale Serve CLI reference](https://tailscale.com/docs/reference/tailscale-cli/serve).
+
+For a TrueNAS Apps-preset dataset, you can run IC Atlas with `APP_UID=568` and `APP_GID=568` (the `apps` identity), provided both mounted directories grant it write access. Create the `data` and `assets` directories first and check their ACLs in TrueNAS. Do not assume the image's default UID 1000 matches your dataset permissions.
+
+Once a build containing the PWA files has been published, deploy that image and open the HTTPS URL on the phone with Tailscale connected. On iPhone, open it in Safari, then choose **Share → Add to Home Screen** and enable **Open as Web App** if offered. On Android Chrome, use **Install app** or **Add to Home screen**. See the [installability requirements](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable). No PWA plugin, push notifications, or service worker is required for this installation flow.
+
 ## Backup and restore
 
 Create an online backup, including a consistent SQLite snapshot, personal uploaded images, and version metadata:
